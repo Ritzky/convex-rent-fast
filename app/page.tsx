@@ -96,7 +96,7 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const profileData: any = {
       ...(role === 'Landlord' && {
         details: {
@@ -122,14 +122,16 @@ export function SignupForm() {
         images: ['image1.jpg', 'image2.jpg'], // Placeholder for images
       }),
     };
-  
+
     const payload = {
       role,
       email: formData.email,
       password: formData.password,
-      profile: profileData,
+      profile: {
+        details: profileData,
+      },
     };
-  
+
     try {
       const response = await fetch(`${CONVEX_SERVER_URL}/auth/signUp`, {
         method: 'POST',
@@ -139,18 +141,17 @@ export function SignupForm() {
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         throw new Error('Sign-up failed');
       }
-  
+
       // On success, redirect or handle accordingly
       router.push('/dashboard');
     } catch (error) {
       console.error(error);
     }
   };
-  
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">

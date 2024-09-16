@@ -88,29 +88,15 @@ httpWithCors.route({
     convertErrorsToResponse(400, async (ctx, req) => {
       try {
         const data = await req.json();
-        const email = data.email as string;
-        const password = data.password as string;
-        const role = data.role as string;
-        const profile = data.profile;
+        const { email, password, role, profile } = data;
 
-        // Validate role
-        if (!role || !['Landlord', 'Tenant', 'Maintenance', 'Cleaner'].includes(role)) {
-          throw new Error("Invalid role");
+        if (!email || !password || !role || !profile) {
+          throw new Error("Missing required fields");
         }
 
-        // Validate profile based on role
-        if (role === 'Landlord') {
-          if (!profile || typeof profile.numberOfProperties !== 'number') {
-            throw new Error("Invalid profile for Landlord");
-          }
-        } else if (role === 'Tenant') {
-          if (!profile || typeof profile.currentAddress !== 'string') {
-            throw new Error("Invalid profile for Tenant");
-          }
-        } else if (role === 'Maintenance' || role === 'Cleaner') {
-          if (!profile || !Array.isArray(profile.availability)) {
-            throw new Error("Invalid profile for Maintenance or Cleaner");
-          }
+        // Validate role
+        if (!['Landlord', 'Tenant', 'Maintenance', 'Cleaner'].includes(role)) {
+          throw new Error("Invalid role");
         }
 
         // Proceed with signup
@@ -118,7 +104,7 @@ httpWithCors.route({
           email,
           password,
           role,
-          profile,
+          profile: { details: profile },
         });
 
         return new Response(null, {
