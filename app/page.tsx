@@ -417,3 +417,21 @@ convex/http.ts:107:11 - error TS2741: Property 'role' is missing in type '{ deta
     The expected type comes from property 'profile' which is declared here on type '{ role: string; email: string; profile: { details?: { fullName: string; numberOfProperties: number; } | { fullName: string; currentAddress: string; numberOfPeople: number; currentIncome: number; ... 6 more ...; summary: string; } | { ...; } | undefined; role: string; }; password: string; }'       
 
 Found 1 error in convex/http.ts:107
+
+'Error in /auth/signUp:' 'Invalid profile for Landlord'
+
+
+
+payload: {role: "Landlord", email: "landlord@test.com", password: "landlord",…}
+email
+: 
+"landlord@test.com"
+password
+: 
+"landlord"
+profile
+: 
+{details: {fullName: "Landlord1", numberOfProperties: 3}}
+role
+: 
+"Landlord"
