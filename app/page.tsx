@@ -398,3 +398,57 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
 		</form>
 	);
 }
+
+{role: "Tenant", email: "tenant@tenant.com", password: "tenant", profile: {,…}}
+email
+: 
+"tenant@tenant.com"
+password
+: 
+"tenant"
+profile
+: 
+{,…}
+details
+: 
+{currentAddress: "123 park avenue", currentIncome: 100000, areaToMove: "london", miles: 15,…}
+areaToMove
+: 
+"london"
+currentAddress
+: 
+"123 park avenue"
+currentIncome
+: 
+100000
+miles
+: 
+15
+moveDate
+: 
+"10/02/2024"
+pets
+: 
+3
+smoker
+: 
+"yes"
+role
+: 
+"Tenant"
+
+payload being sent return error: ArgumentValidationError: Value does not match validator.
+Path: .profile.details
+Value: {areaToMove: "london", currentAddress: "123 park avenue", currentIncome: 100000.0, miles: 15.0, moveDate: "10/02/2024", pets: 3.0, smoker: "yes"}
+Validator: v.union(v.object({fullName: v.string(), numberOfProperties: v.float64()}), v.object({areaToMove: v.string(), currentAddress: v.string(), currentIncome: v.float64(), fullName: v.string(), jobTitle: v.string(), miles: v.float64(), moveDate: v.string(), numberOfPeople: v.float64(), pets: v.float64(), smoker: v.string(), summary: v.string()}), v.object({areaToMove: v.string(), availability: v.string(), fullName: v.string(), images: v.array(v.string()), keySkills: v.array(v.string()), miles: v.float64(), summary: v.string()}))
+
+
+Sep 16, 19:48:49
+
+H
+POST /auth/signUp
+error
+'Error in /auth/signUp:' 'ArgumentValidationError: Value does not match validator.
+Path: .profile.details
+Value: {areaToMove: "london", currentAddress: "123 park avenue", currentIncome: 100000.0, miles: 15.0, moveDate: "10/02/2024", pets: 3.0, smoker: "yes"}
+Validator: v.union(v.object({fullName: v.string(), numberOfProperties: v.float64()}), v.object({areaToMove: v.string(), currentAddress: v.string(), currentIncome: v.float64(), fullName: v.string(), jobTitle: v.string(), miles: v.float64(), moveDate: v.string(), numberOfPeople: v.float64(), pets: v.float64(), smoker: v.string(), summary: v.string()}), v.object({areaToMove: v.string(), availability: v.string(), fullName: v.string(), images: v.array(v.string()), keySkills: v.array(v.string()), miles: v.float64(), summary: v.string()}))
