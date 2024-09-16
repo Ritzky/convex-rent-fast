@@ -87,10 +87,9 @@ httpWithCors.route({
   handler: httpAction(
     convertErrorsToResponse(400, async (ctx, req) => {
       try {
-        const data = await req.json();
-        const { email, password, role, profile } = data;
+        const { email, password, role, profile } = await req.json();
 
-        if (!email || !password || !role || !profile) {
+        if (!email || !password || !role || !profile || !profile.details) {
           throw new Error("Missing required fields");
         }
 
@@ -104,15 +103,17 @@ httpWithCors.route({
           email,
           password,
           role,
-          profile: { details: profile },
+          profile: {
+            ...profile,
+            role,
+          },
         });
-
+        
         return new Response(null, {
           status: 200,
           headers: sessionCookieHeader(sessionId, "refresh"),
         });
       } catch (error) {
-        // Type assertion
         const errorMessage = (error as Error).message;
         console.error("Error in /auth/signUp:", errorMessage);
         return new Response(errorMessage, { status: 400 });
