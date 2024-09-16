@@ -28,7 +28,7 @@ export const listNumbers = query({
       .take(args.count);
     return {
       viewer: viewer.email,
-      numbers: numbers.toReversed().map((number) => number.value),
+      numbers: numbers.reverse().map((number) => number.value), // Changed to reverse()
     };
   },
 });
@@ -93,3 +93,29 @@ async function getViewerId(ctx: QueryCtx) {
   }
   return auth.subject as Id<"users">;
 }
+
+export const getUser = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .first();
+    
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      profile: user.profile
+    };
+  },
+});
+
+

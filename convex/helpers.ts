@@ -43,29 +43,28 @@ export function corsRoutes(http: HttpRouter, origin: () => string) {
       handler: PublicHttpAction;
       credentials: boolean;
     }) {
+      // Handle preflight OPTIONS requests
       if (method !== "GET") {
         http.route({
           path,
           method: "OPTIONS",
           handler: httpAction(async (ctx, req) => {
-            const response = await (handler as any)(ctx, req);
-            const headers = new Headers(response.headers);
+            const headers = new Headers();
             headers.set("Access-Control-Allow-Origin", origin());
-            headers.set("Access-Control-Allow-Methods", method);
-            headers.set("Vary", "Origin");
+            headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH");
+            headers.set("Access-Control-Allow-Headers", "Content-Type"); // Add other headers if needed
             if (credentials) {
               headers.set("Access-Control-Allow-Credentials", "true");
             }
-
-            return new Response(response.body, {
-              status: response.status,
-              statusText: response.statusText,
-              headers: headers,
+            return new Response(null, {
+              status: 204, // No Content
+              headers,
             });
           }),
         });
       }
 
+      // Handle other requests
       http.route({
         path,
         method,
@@ -76,11 +75,10 @@ export function corsRoutes(http: HttpRouter, origin: () => string) {
           if (credentials) {
             headers.set("Access-Control-Allow-Credentials", "true");
           }
-
           return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,
-            headers: headers,
+            headers,
           });
         }),
       });

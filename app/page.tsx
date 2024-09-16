@@ -1,154 +1,401 @@
 "use client";
 
-import { useAuthClient } from "@/app/AuthProvider";
-import { Code } from "@/components/typography/code";
-import { Link } from "@/components/typography/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { api } from "@/convex/_generated/api";
+import { useAuthClient } from './AuthProvider';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import logo from '@/images/logo.png';
 import { CONVEX_SERVER_URL } from "@/lib/server";
-import {
-  Authenticated,
-  Unauthenticated,
-  useMutation,
-  useQuery,
-} from "convex/react";
-import { useState } from "react";
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 export default function Home() {
-  return (
-    <main className="container max-w-2xl flex flex-col gap-8">
-      <h1 className="text-4xl font-extrabold my-8 text-center">
-        Convex + Auth + Next.js
-      </h1>
-      <Authenticated>
-        <SignedIn />
-      </Authenticated>
-      <Unauthenticated>
-        <AuthForm />
-      </Unauthenticated>
-    </main>
-  );
-}
+  const [isLogin, setIsLogin] = useState(true);
 
-function SignedIn() {
-  const { viewer, numbers } =
-    useQuery(api.myFunctions.listNumbers, { count: 10 }) ?? {};
-  const addNumber = useMutation(api.myFunctions.addNumber);
+  const { isAuthenticated, isLoading } = useAuthClient();
+  const router = useRouter();
+  const userRole = useQuery(api.users.getUserRole);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   return (
-    <>
-      <p className="flex gap-4 items-center justify-between">
-        Welcome {viewer}!
-        <SignOutButton />
-      </p>
-      <p>
-        Click the button below and open this page in another window - this data
-        is persisted in the Convex cloud database!
-      </p>
-      <p>
-        <Button
-          onClick={() => {
-            void addNumber({ value: Math.floor(Math.random() * 10) });
-          }}
-        >
-          Add a random number
-        </Button>
-      </p>
-      <p>
-        Numbers:{" "}
-        {numbers?.length === 0
-          ? "Click the button!"
-          : numbers?.join(", ") ?? "..."}
-      </p>
-      <p>
-        Edit <Code>convex/myFunctions.ts</Code> to change your backend
-      </p>
-      <p>
-        Edit <Code>app/(fullstack)/page.tsx</Code> to change your frontend
-      </p>
-      <p>
-        Check out{" "}
-        <Link target="_blank" href="https://docs.convex.dev/home">
-          Convex docs
-        </Link>
-      </p>
-      <p>
-        To build a full page layout copy one of the included{" "}
-        <Link target="_blank" href="/layouts">
-          layouts
-        </Link>
-      </p>
-    </>
-  );
-}
-
-function SignOutButton() {
-  const { signOut } = useAuthClient();
-  return <Button onClick={() => void signOut()}>Sign out</Button>;
-}
-
-function AuthForm() {
-  const { refreshAuth } = useAuthClient();
-  const [error, setError] = useState(null);
-  const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
-
-  return (
-    <div className="flex flex-col items-center px-20 gap-4">
-      <form
-        className="flex flex-col w-[18rem]"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setError(null);
-          const formData = new FormData(event.currentTarget);
-          fetch(`${CONVEX_SERVER_URL}/auth/${flow}`, {
-            method: "POST",
-            credentials: "include",
-            body: formData,
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(response.statusText);
-              }
-              return refreshAuth();
-            })
-            .catch((error) => {
-              setError(error);
-            });
-        }}
-      >
-        <label htmlFor="email">Email</label>
-        <Input name="email" id="email" className="mb-4" autoComplete="email" />
-        <label htmlFor="password">Password</label>
-        <Input
-          type="password"
-          name="password"
-          id="password"
-          className="mb-4 "
-          autoComplete="current-password"
-        />
-        <Button type="submit">
-          {flow === "signIn" ? "Sign in" : "Sign up"}
-        </Button>
-      </form>
-      <Button
-        variant="link"
-        onClick={() => {
-          setFlow(flow === "signIn" ? "signUp" : "signIn");
-          setError(null);
-        }}
-      >
-        {flow === "signIn"
-          ? "Don't have an account? Sign up"
-          : "Already have an account? Sign in"}
-      </Button>
-      <div className="font-medium text-sm text-red-500">
-        {error !== null
-          ? flow === "signIn"
-            ? "Could not sign in, did you mean to sign up?"
-            : "Could not sign up, did you mean to sign in?"
-          : null}
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white shadow-md rounded-lg p-8 w-96">
+        {isLoading || isAuthenticated ? (
+          <div>Loading...</div>
+        ) : isLogin ? (
+          <LoginForm switchToSignup={() => setIsLogin(false)} />
+        ) : (
+          <SignupForm switchToLogin={() => setIsLogin(true)} />
+        )}
       </div>
     </div>
   );
 }
+
+// User Data Type Definition
+type UserData = {
+  fullName: string;
+  email?: string;
+  password?: string;
+  numberOfProperties?: number;
+  currentIncome?: number;
+  jobTitle?: string;
+  currentAddress?: string;
+  smoking?: boolean;
+  pets?: number;
+  areaToMove?: string;
+  miles?: number;
+  moveDate?: string;
+  availability?: string[];
+  keySkills?: string[];
+  images?: File[];
+  summary?: string;
+};
+
+export function SignupForm() {
+  const [role, setRole] = useState<'Tenant' | 'Landlord' | 'Maintenance' | 'Cleaner'>('Tenant');
+  const [formData, setFormData] = useState<UserData>({
+    email: '',
+    password: '',
+    fullName: '',
+  });
+  const [availability, setAvailability] = useState<string[]>([]);
+  const [step, setStep] = useState<number>(1);
+  const [showSummary, setShowSummary] = useState<boolean>(false);
+  const router = useRouter();
+
+  // Handle form input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  // Handle next question or move to summary
+  const handleNextQuestion = () => {
+    if (step < 5) {
+      setStep(step + 1);
+    } else {
+      setShowSummary(true);
+    }
+  };
+
+  // Handle previous question
+  const handlePreviousQuestion = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    const profileData: any = {
+      ...(role === 'Landlord' && {
+        details: {
+          fullName: formData.fullName,
+          numberOfProperties: Number(formData.numberOfProperties),
+        },
+      }),
+      ...(role === 'Tenant' && {
+        currentAddress: formData.currentAddress,
+        currentIncome: Number(formData.currentIncome),
+        areaToMove: formData.areaToMove,
+        miles: Number(formData.miles),
+        moveDate: formData.moveDate,
+        smoker: formData.smoking ? 'yes' : 'no',
+        pets: Number(formData.pets),
+      }),
+      ...(role === 'Maintenance' || role === 'Cleaner' && {
+        availability: availability,
+        keySkills: formData.keySkills || [],
+        areaToMove: formData.areaToMove,
+        miles: Number(formData.miles),
+        summary: formData.summary,
+        images: ['image1.jpg', 'image2.jpg'], // Placeholder for images
+      }),
+    };
+  
+    const payload = {
+      role,
+      email: formData.email,
+      password: formData.password,
+      profile: profileData,
+    };
+  
+    try {
+      const response = await fetch(`${CONVEX_SERVER_URL}/auth/signUp`, {
+        method: 'POST',
+        credentials: "include",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Sign-up failed');
+      }
+  
+      // On success, redirect or handle accordingly
+      router.push('/dashboard');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col">
+      <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
+
+      {/* Role Selection */}
+      <div className="flex justify-around mb-4">
+        {['Tenant', 'Landlord', 'Maintenance', 'Cleaner'].map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setRole(item as 'Tenant' | 'Landlord' | 'Maintenance' | 'Cleaner')}
+            className={`py-2 px-4 rounded-lg ${role === item ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
+      {/* Steps for filling the form */}
+      {!showSummary && (
+        <>
+          {step === 1 && (
+            <>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="text"
+                name="fullName"
+                placeholder="Full Name"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+            </>
+          )}
+
+          {/* Conditional fields based on role */}
+          {step === 2 && role === 'Landlord' && (
+            <input
+              type="number"
+              name="numberOfProperties"
+              placeholder="Number of Properties"
+              value={formData.numberOfProperties || ''}
+              onChange={handleInputChange}
+              required
+              className="mb-4 p-2 border rounded"
+            />
+          )}
+
+          {step === 2 && role === 'Tenant' && (
+            <>
+              <input
+                type="text"
+                name="currentAddress"
+                placeholder="Current Address"
+                value={formData.currentAddress || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="number"
+                name="currentIncome"
+                placeholder="Current Income"
+                value={formData.currentIncome || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="text"
+                name="areaToMove"
+                placeholder="Area to Move"
+                value={formData.areaToMove || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="number"
+                name="miles"
+                placeholder="Miles Willing to Travel"
+                value={formData.miles || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="text"
+                name="moveDate"
+                placeholder="Move Date"
+                value={formData.moveDate || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <label className="mb-4">
+                Smoker?
+                <input
+                  type="checkbox"
+                  name="smoking"
+                  checked={!!formData.smoking}
+                  onChange={handleInputChange}
+                  className="ml-2"
+                />
+              </label>
+              <input
+                type="number"
+                name="pets"
+                placeholder="Number of Pets"
+                value={formData.pets || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+            </>
+          )}
+
+          {step === 2 && (role === 'Maintenance' || role === 'Cleaner') && (
+            <>
+              <label className="mb-4">Availability</label>
+              <textarea
+                name="availability"
+                placeholder="Availability"
+                value={availability.join(', ') || ''}
+                onChange={(e) => setAvailability(e.target.value.split(', '))}
+                className="mb-4 p-2 border rounded"
+              />
+              <input
+                type="text"
+                name="keySkills"
+                placeholder="Key Skills"
+                value={formData.keySkills?.join(', ') || ''}
+                onChange={handleInputChange}
+                required
+                className="mb-4 p-2 border rounded"
+              />
+              <textarea
+                name="summary"
+                placeholder="Summary"
+                value={formData.summary || ''}
+                onChange={handleInputChange}
+                className="mb-4 p-2 border rounded"
+              />
+            </>
+          )}
+
+          {/* Navigation buttons */}
+          <div className="flex justify-between">
+            {step > 1 && (
+              <button type="button" onClick={handlePreviousQuestion} className="bg-gray-300 py-2 px-4 rounded">
+                Back
+              </button>
+            )}
+            <button type="button" onClick={handleNextQuestion} className="bg-blue-500 text-white py-2 px-4 rounded">
+              Next
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Summary & Submit Section */}
+      {showSummary && (
+        <>
+          <h2 className="text-xl font-bold mb-4">Summary of your details</h2>
+          <pre className="mb-4">{JSON.stringify(formData, null, 2)}</pre>
+          <button type="submit" className="bg-green-500 text-white py-2 px-4 rounded">
+            Submit
+          </button>
+          <button type="button" onClick={() => setShowSummary(false)} className="ml-2 bg-gray-300 py-2 px-4 rounded">
+            Edit
+          </button>
+        </>
+      )}
+    </form>
+  );
+}
+
+function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		fetch(`${CONVEX_SERVER_URL}/auth/signIn`, {
+      method: "POST",
+      credentials: "include", // Ensure cookies are included if needed
+      body: JSON.stringify({ email, password }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+		.then(response => {
+			if (!response.ok) throw new Error('Login failed');
+			// Handle successful login
+		})
+		.catch(error => {
+			alert(error.message);
+		});
+	};
+
+	return (
+		<form onSubmit={handleSubmit} className="flex flex-col">
+			<h1 className="text-2xl font-bold text-center mb-4 text-gray-800">Login</h1>
+			<input className='border rounded p-2 mb-4 text-gray-800'
+				type="email"
+				name="email"
+				value={email}
+				onChange={(e) => setEmail(e.target.value)}
+				placeholder="Email"
+				required
+			/>
+			<input className='border rounded p-2 mb-4 text-gray-800'
+				type="password"
+				name="password"
+				value={password}
+				onChange={(e) => setPassword(e.target.value)}
+				placeholder="Password"
+				required
+			/>
+			<button type="submit" className="mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Login</button>
+			<p className="text-center mt-4 text-gray-700">
+				Don't have an account?{' '}
+				<button type="button" onClick={switchToSignup} className="text-blue-500">Sign up</button>
+			</p>
+		</form>
+	);
+}
+
+
