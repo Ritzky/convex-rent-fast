@@ -5,7 +5,6 @@ import { useAuthClient } from './AuthProvider';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CONVEX_SERVER_URL } from "@/lib/server";
-import { api } from '@/convex/_generated/api';
 
 // User Data Type Definition
 type UserData = {
