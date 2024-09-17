@@ -1,5 +1,5 @@
 "use client";
-import { CONVEX_SERVER_URL } from "@/lib/server";
+import { CONVEX_SERVER_URL } from "./lib/server";
 import {
   ReactNode,
   useCallback,

@@ -1,6 +1,6 @@
 "use client";
-import { AuthProvider, useAuth } from "@/app/AuthProvider";
-import { AfterSSR } from "@/components/helpers/AfterSSR";
+import { AuthProvider, useAuth } from "../app/AuthProvider";
+import { AfterSSR } from "./components/helpers/AfterSSR";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
 

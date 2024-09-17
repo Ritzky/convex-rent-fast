@@ -4,7 +4,7 @@ import { useAuthClient } from './AuthProvider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { api } from '../convex/_generated/api';
 
 export default function Profile() {
 	const { isAuthenticated, isLoading } = useAuthClient();
