@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 "use client";
 
 import { useAuthClient } from './AuthProvider';
@@ -8,34 +9,6 @@ import logo from '@/images/logo.png';
 import { CONVEX_SERVER_URL } from "@/lib/server";
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-
-export default function Home() {
-  const [isLogin, setIsLogin] = useState(true);
-
-  const { isAuthenticated, isLoading } = useAuthClient();
-  const router = useRouter();
-  const userRole = useQuery(api.users.getUserRole);
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isLoading, isAuthenticated, router]);
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-md rounded-lg p-8 w-96">
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : isLogin ? (
-          <LoginForm switchToSignup={() => setIsLogin(false)} />
-        ) : (
-          <SignupForm switchToLogin={() => setIsLogin(true)} />
-        )}
-      </div>
-    </div>
-  );
-}
 
 // User Data Type Definition
 type UserData = {
@@ -64,7 +37,7 @@ interface SignupFormProps {
   switchToLogin: () => void;
 }
 
-export function SignupForm({ switchToLogin }: SignupFormProps) {
+const SignupForm = ({ switchToLogin }: SignupFormProps) => {
   const [role, setRole] = useState<Role>('Tenant');
   const [formData, setFormData] = useState<UserData>({
     email: '',
@@ -78,8 +51,10 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
 
   // Handle form input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked; // Type assertion
+  
+    setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
@@ -129,7 +104,7 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
       ...((role === 'Maintenance' || role === 'Cleaner') && {
         details: {
           fullName: formData.fullName || '',
-          availability: availability,
+          availability,
           keySkills: formData.keySkills || [],
           areaToMove: formData.areaToMove || '',
           miles: formData.miles ? Number(formData.miles) : 0,
@@ -138,7 +113,7 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
         },
       }),
     };
-    
+
     const payload = {
       role,
       email: formData.email,
@@ -149,7 +124,7 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
     try {
       const response = await fetch(`${CONVEX_SERVER_URL}/auth/signUp`, {
         method: 'POST',
-        credentials: "include",
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -173,7 +148,7 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
 
       {/* Role Selection */}
       <div className="flex justify-around mb-4">
-        {['Tenant', 'Landlord', 'Maintenance', 'Cleaner'].map((item) => (
+        {['Tenant', 'Landlord', 'Maintenance', 'Cleaner'].map(item => (
           <button
             key={item}
             type="button"
@@ -235,66 +210,66 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
 
           {step === 2 && role === 'Tenant' && (
             <>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="currentAddress"
                 value={formData.currentAddress || ''}
                 onChange={handleInputChange}
-                placeholder="Current Address" 
+                placeholder="Current Address"
               />
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="currentIncome"
                 value={formData.currentIncome || ''}
                 onChange={handleInputChange}
-                placeholder="Current Income" 
+                placeholder="Current Income"
               />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="jobTitle"
                 value={formData.jobTitle || ''}
                 onChange={handleInputChange}
-                placeholder="Job Title" 
+                placeholder="Job Title"
               />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="areaToMove"
                 value={formData.areaToMove || ''}
                 onChange={handleInputChange}
-                placeholder="Area to Move" 
+                placeholder="Area to Move"
               />
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="miles"
                 value={formData.miles || ''}
                 onChange={handleInputChange}
-                placeholder="Miles Willing to Move" 
+                placeholder="Miles Willing to Move"
               />
-              <input 
-                type="date" 
+              <input
+                type="date"
                 name="moveDate"
                 value={formData.moveDate || ''}
                 onChange={handleInputChange}
-                placeholder="Move Date" 
+                placeholder="Move Date"
               />
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="numberOfPeople"
                 value={formData.numberOfPeople || ''}
                 onChange={handleInputChange}
-                placeholder="Number of People" 
+                placeholder="Number of People"
               />
-              <input 
-                type="number" 
+              <input
+                type="number"
                 name="pets"
                 value={formData.pets || ''}
                 onChange={handleInputChange}
-                placeholder="Number of Pets" 
+                placeholder="Number of Pets"
               />
               <label>
                 Smoking:
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   name="smoking"
                   checked={formData.smoking || false}
                   onChange={handleInputChange}
@@ -316,18 +291,18 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
                 name="availability"
                 placeholder="Availability"
                 value={availability.join(', ') || ''}
-                onChange={(e) => setAvailability(e.target.value.split(', '))}
+                onChange={(e) => setAvailability(e.target.value.split(', ').map(item => item.trim()))}
                 className="mb-4 p-2 border rounded"
               />
               <input
                 type="text"
                 name="keySkills"
                 placeholder="Key Skills (comma-separated)"
-                value={formData.keySkills?.join(', ') || ''} // Display as comma-separated
-                onChange={(e) => setFormData((prev) => ({
+                value={formData.keySkills?.join(', ') || ''}
+                onChange={(e) => setFormData(prev => ({
                   ...prev,
-                  keySkills: e.target.value.split(',').map(skill => skill.trim()) // Convert back to array on change
-                }))} 
+                  keySkills: e.target.value.split(',').map(skill => skill.trim())
+                }))}
                 required
                 className="mb-4 p-2 border rounded"
               />
@@ -344,11 +319,19 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
           {/* Navigation buttons */}
           <div className="flex justify-between">
             {step > 1 && (
-              <button type="button" onClick={handlePreviousQuestion} className="bg-gray-300 py-2 px-4 rounded">
+              <button
+                type="button"
+                onClick={handlePreviousQuestion}
+                className="bg-gray-300 py-2 px-4 rounded"
+              >
                 Back
               </button>
             )}
-            <button type="button" onClick={handleNextQuestion} className="bg-blue-500 text-white py-2 px-4 rounded">
+            <button
+              type="button"
+              onClick={handleNextQuestion}
+              className="bg-blue-500 text-white py-2 px-4 rounded"
+            >
               Next
             </button>
           </div>
@@ -360,69 +343,120 @@ export function SignupForm({ switchToLogin }: SignupFormProps) {
         <>
           <h2 className="text-xl font-bold mb-4">Summary of your details</h2>
           <pre className="mb-4">{JSON.stringify(formData, null, 2)}</pre>
-          <button type="submit" className="bg-green-500 text-white py-2 px-4 rounded">
+          <button
+            type="submit"
+            className="bg-green-500 text-white py-2 px-4 rounded"
+          >
             Submit
           </button>
-          <button type="button" onClick={() => setShowSummary(false)} className="ml-2 bg-gray-300 py-2 px-4 rounded">
+          <button
+            type="button"
+            onClick={() => setShowSummary(false)}
+            className="ml-2 bg-gray-300 py-2 px-4 rounded"
+          >
             Edit
           </button>
         </>
       )}
     </form>
   );
-}
+};
 
 interface LoginFormProps {
   switchToSignup: () => void;
 }
 
-function LoginForm({ switchToSignup }: LoginFormProps) {
+const LoginForm = ({ switchToSignup }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    fetch(`${CONVEX_SERVER_URL}/auth/signIn`, {
-      method: "POST",
-      credentials: "include", // Ensure cookies are included if needed
-      body: JSON.stringify({ email, password }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Login failed');
+
+    try {
+      const response = await fetch(`${CONVEX_SERVER_URL}/auth/signIn`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
       // Handle successful login
-    })
-    .catch(error => {
-      alert(error.message);
-    });
+    } catch (error) {
+      alert((error as Error).message);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col">
       <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">Login</h1>
-      <input className='border rounded p-2 mb-4 text-gray-800'
+      <input
         type="email"
         name="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         required
+        className="border rounded p-2 mb-4 text-gray-800"
       />
-      <input className='border rounded p-2 mb-4 text-gray-800'
+      <input
         type="password"
         name="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
         required
+        className="border rounded p-2 mb-4 text-gray-800"
       />
-      <button type="submit" className="mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Login</button>
+      <button
+        type="submit"
+        className="mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+      >
+        Login
+      </button>
       <p className="text-center mt-4 text-gray-700">
-        Don't have an account?{' '}
-        <button type="button" onClick={switchToSignup} className="text-blue-500">Sign up</button>
+        Don&apos;t have an account?{' '}
+        <button
+          type="button"
+          onClick={switchToSignup}
+          className="text-blue-500"
+        >
+          Sign up
+        </button>
       </p>
     </form>
+  );
+};
+
+export default function Home() {
+  const [isLogin, setIsLogin] = useState(true);
+  const { isAuthenticated, isLoading } = useAuthClient();
+  const router = useRouter();
+  const userRole = useQuery(api.users.getUserRole);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white shadow-md rounded-lg p-8 w-96">
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : isLogin ? (
+          <LoginForm switchToSignup={() => setIsLogin(false)} />
+        ) : (
+          <SignupForm switchToLogin={() => setIsLogin(true)} />
+        )}
+      </div>
+    </div>
   );
 }
