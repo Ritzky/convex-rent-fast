@@ -20,7 +20,7 @@ export default defineSchema({
       smoker: v.optional(v.string()),
       miles: v.optional(v.number()),
       summary: v.optional(v.string()),
-      availability: v.optional(v.string()),
+      availability: v.optional(v.array(v.string())),
       keySkills: v.optional(v.array(v.string())),
       images: v.optional(v.array(v.string())),
     })),

@@ -32,7 +32,7 @@ export const signUp = internalMutation({
         }),
         v.object({ // Maintenance or Cleaner profile
           fullName: v.string(),
-          availability: v.string(),
+          availability: v.array(v.string()),
           keySkills: v.array(v.string()),
           areaToMove: v.string(),
           miles: v.number(),
@@ -65,7 +65,7 @@ export const signUp = internalMutation({
         currentIncome: (profile.details as { currentIncome: number }).currentIncome || 0,
         jobTitle: (profile.details as {jobTitle: string}).jobTitle || '',
         pets: (profile.details as {pets: number}).pets || 0,
-        smoker: (profile.details as {smoker: string}).smoker || 'false',
+        smoker: (profile.details as {smoker: string}).smoker || 'no',
         fullName: (profile.details as { fullName: string }).fullName || '', // Array for multiple names
         areaToMove: (profile.details as { areaToMove: string }).areaToMove|| '',
         moveDate: (profile.details as { moveDate: string }).moveDate|| '',
@@ -73,7 +73,7 @@ export const signUp = internalMutation({
         summary: (profile.details as { summary: string }).summary || '', // Ensure correct type assertion
       } : (role === 'Maintenance' || role === 'Cleaner') ? { // For maintenance or cleaners
         fullName: (profile.details as { fullName: string }).fullName || '', // Array for multiple names
-        availability: (profile.details as { availability: string }).availability || '', // Days of the week
+        availability: (profile.details as { availability: string[] }).availability || [], // Days of the week
         keySkills: (profile.details as { keySkills: string[] }).keySkills || [], // Key skills
         images: (profile.details as { images: string[] }).images || [], // Ensure images is an array
         summary: (profile.details as { summary: string }).summary || '', // Summary

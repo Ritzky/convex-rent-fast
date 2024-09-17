@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white shadow-md rounded-lg p-8 w-96">
-        {isLoading || isAuthenticated ? (
+        {isLoading ? (
           <div>Loading...</div>
         ) : isLogin ? (
           <LoginForm switchToSignup={() => setIsLogin(false)} />
@@ -51,14 +51,21 @@ type UserData = {
   areaToMove?: string;
   miles?: number;
   moveDate?: string;
+  numberOfPeople?: number;
   availability?: string[];
   keySkills?: string[];
   images?: File[];
   summary?: string;
 };
 
-export function SignupForm() {
-  const [role, setRole] = useState<'Tenant' | 'Landlord' | 'Maintenance' | 'Cleaner'>('Tenant');
+type Role = 'Tenant' | 'Landlord' | 'Maintenance' | 'Cleaner';
+
+interface SignupFormProps {
+  switchToLogin: () => void;
+}
+
+export function SignupForm({ switchToLogin }: SignupFormProps) {
+  const [role, setRole] = useState<Role>('Tenant');
   const [formData, setFormData] = useState<UserData>({
     email: '',
     password: '',
@@ -106,34 +113,37 @@ export function SignupForm() {
       }),
       ...(role === 'Tenant' && {
         details: {
-        currentAddress: formData.currentAddress,
-        currentIncome: Number(formData.currentIncome),
-        areaToMove: formData.areaToMove,
-        miles: Number(formData.miles),
-        moveDate: formData.moveDate,
-        smoker: formData.smoking ? 'yes' : 'no',
-        pets: Number(formData.pets),
+          fullName: formData.fullName,
+          currentAddress: formData.currentAddress,
+          currentIncome: Number(formData.currentIncome),
+          jobTitle: formData.jobTitle,
+          areaToMove: formData.areaToMove,
+          miles: formData.miles ? Number(formData.miles) : 0,
+          moveDate: formData.moveDate,
+          smoker: formData.smoking ? 'yes' : 'no',
+          pets: Number(formData.pets),
+          numberOfPeople: Number(formData.numberOfPeople),
+          summary: formData.summary,
         },
       }),
-      ...(role === 'Maintenance' || role === 'Cleaner' && {
+      ...((role === 'Maintenance' || role === 'Cleaner') && {
         details: {
-        availability: availability,
-        keySkills: formData.keySkills || [],
-        areaToMove: formData.areaToMove,
-        miles: Number(formData.miles),
-        summary: formData.summary,
-        images: ['image1.jpg', 'image2.jpg'], // Placeholder for images
+          fullName: formData.fullName || '',
+          availability: availability,
+          keySkills: formData.keySkills || [],
+          areaToMove: formData.areaToMove || '',
+          miles: formData.miles ? Number(formData.miles) : 0,
+          summary: formData.summary || '',
+          images: ['image1.jpg', 'image2.jpg'], // Placeholder for images
         },
       }),
     };
-
+    
     const payload = {
       role,
       email: formData.email,
       password: formData.password,
-      profile: {
-        details: profileData,
-      },
+      profile: profileData,
     };
 
     try {
@@ -167,7 +177,7 @@ export function SignupForm() {
           <button
             key={item}
             type="button"
-            onClick={() => setRole(item as 'Tenant' | 'Landlord' | 'Maintenance' | 'Cleaner')}
+            onClick={() => setRole(item as Role)}
             className={`py-2 px-4 rounded-lg ${role === item ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
           >
             {item}
@@ -225,69 +235,76 @@ export function SignupForm() {
 
           {step === 2 && role === 'Tenant' && (
             <>
-              <input
-                type="text"
+              <input 
+                type="text" 
                 name="currentAddress"
-                placeholder="Current Address"
                 value={formData.currentAddress || ''}
                 onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border rounded"
+                placeholder="Current Address" 
               />
-              <input
-                type="number"
+              <input 
+                type="number" 
                 name="currentIncome"
-                placeholder="Current Income"
                 value={formData.currentIncome || ''}
                 onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border rounded"
+                placeholder="Current Income" 
               />
-              <input
-                type="text"
+              <input 
+                type="text" 
+                name="jobTitle"
+                value={formData.jobTitle || ''}
+                onChange={handleInputChange}
+                placeholder="Job Title" 
+              />
+              <input 
+                type="text" 
                 name="areaToMove"
-                placeholder="Area to Move"
                 value={formData.areaToMove || ''}
                 onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border rounded"
+                placeholder="Area to Move" 
               />
-              <input
-                type="number"
+              <input 
+                type="number" 
                 name="miles"
-                placeholder="Miles Willing to Travel"
                 value={formData.miles || ''}
                 onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border rounded"
+                placeholder="Miles Willing to Move" 
               />
-              <input
-                type="text"
+              <input 
+                type="date" 
                 name="moveDate"
-                placeholder="Move Date"
                 value={formData.moveDate || ''}
                 onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border rounded"
+                placeholder="Move Date" 
               />
-              <label className="mb-4">
-                Smoker?
-                <input
-                  type="checkbox"
-                  name="smoking"
-                  checked={!!formData.smoking}
-                  onChange={handleInputChange}
-                  className="ml-2"
-                />
-              </label>
-              <input
-                type="number"
+              <input 
+                type="number" 
+                name="numberOfPeople"
+                value={formData.numberOfPeople || ''}
+                onChange={handleInputChange}
+                placeholder="Number of People" 
+              />
+              <input 
+                type="number" 
                 name="pets"
-                placeholder="Number of Pets"
                 value={formData.pets || ''}
                 onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border rounded"
+                placeholder="Number of Pets" 
+              />
+              <label>
+                Smoking:
+                <input 
+                  type="checkbox" 
+                  name="smoking"
+                  checked={formData.smoking || false}
+                  onChange={handleInputChange}
+                />
+              </label>
+              <textarea
+                name="summary"
+                value={formData.summary || ''}
+                onChange={handleInputChange}
+                placeholder="Summary"
               />
             </>
           )}
@@ -305,9 +322,12 @@ export function SignupForm() {
               <input
                 type="text"
                 name="keySkills"
-                placeholder="Key Skills"
-                value={formData.keySkills?.join(', ') || ''}
-                onChange={handleInputChange}
+                placeholder="Key Skills (comma-separated)"
+                value={formData.keySkills?.join(', ') || ''} // Display as comma-separated
+                onChange={(e) => setFormData((prev) => ({
+                  ...prev,
+                  keySkills: e.target.value.split(',').map(skill => skill.trim()) // Convert back to array on change
+                }))} 
                 required
                 className="mb-4 p-2 border rounded"
               />
@@ -352,13 +372,17 @@ export function SignupForm() {
   );
 }
 
-function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
+interface LoginFormProps {
+  switchToSignup: () => void;
+}
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		fetch(`${CONVEX_SERVER_URL}/auth/signIn`, {
+function LoginForm({ switchToSignup }: LoginFormProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetch(`${CONVEX_SERVER_URL}/auth/signIn`, {
       method: "POST",
       credentials: "include", // Ensure cookies are included if needed
       body: JSON.stringify({ email, password }),
@@ -366,39 +390,39 @@ function LoginForm({ switchToSignup }: { switchToSignup: () => void }) {
         'Content-Type': 'application/json',
       },
     })
-		.then(response => {
-			if (!response.ok) throw new Error('Login failed');
-			// Handle successful login
-		})
-		.catch(error => {
-			alert(error.message);
-		});
-	};
+    .then(response => {
+      if (!response.ok) throw new Error('Login failed');
+      // Handle successful login
+    })
+    .catch(error => {
+      alert(error.message);
+    });
+  };
 
-	return (
-		<form onSubmit={handleSubmit} className="flex flex-col">
-			<h1 className="text-2xl font-bold text-center mb-4 text-gray-800">Login</h1>
-			<input className='border rounded p-2 mb-4 text-gray-800'
-				type="email"
-				name="email"
-				value={email}
-				onChange={(e) => setEmail(e.target.value)}
-				placeholder="Email"
-				required
-			/>
-			<input className='border rounded p-2 mb-4 text-gray-800'
-				type="password"
-				name="password"
-				value={password}
-				onChange={(e) => setPassword(e.target.value)}
-				placeholder="Password"
-				required
-			/>
-			<button type="submit" className="mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Login</button>
-			<p className="text-center mt-4 text-gray-700">
-				Don't have an account?{' '}
-				<button type="button" onClick={switchToSignup} className="text-blue-500">Sign up</button>
-			</p>
-		</form>
-	);
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col">
+      <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">Login</h1>
+      <input className='border rounded p-2 mb-4 text-gray-800'
+        type="email"
+        name="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      <input className='border rounded p-2 mb-4 text-gray-800'
+        type="password"
+        name="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        required
+      />
+      <button type="submit" className="mt-4 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Login</button>
+      <p className="text-center mt-4 text-gray-700">
+        Don't have an account?{' '}
+        <button type="button" onClick={switchToSignup} className="text-blue-500">Sign up</button>
+      </p>
+    </form>
+  );
 }
