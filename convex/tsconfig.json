@@ -15,9 +15,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "jsx": "preserve",
-    "incremental": true
+    "incremental": false  // Set to false to avoid issues with .tsbuildinfo
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }
-
