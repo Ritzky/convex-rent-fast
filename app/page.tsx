@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
+// Import necessary modules
 "use client";
 
 import { useAuthClient } from './AuthProvider';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import logo from '@/images/logo.png';
 import { CONVEX_SERVER_URL } from "@/lib/server";
-import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
 // User Data Type Definition
@@ -27,12 +24,13 @@ type UserData = {
   numberOfPeople?: number;
   availability?: string[];
   keySkills?: string[];
-  images?: File[];
   summary?: string;
 };
 
+// Role Type Definition
 type Role = 'Tenant' | 'Landlord' | 'Maintenance' | 'Cleaner';
 
+// SignupForm Component
 interface SignupFormProps {
   switchToLogin: () => void;
 }
@@ -52,8 +50,8 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
   // Handle form input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked; // Type assertion
-  
+    const checked = (e.target as HTMLInputElement).checked;
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -76,9 +74,10 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const profileData: any = {
       ...(role === 'Landlord' && {
         details: {
@@ -109,18 +108,17 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
           areaToMove: formData.areaToMove || '',
           miles: formData.miles ? Number(formData.miles) : 0,
           summary: formData.summary || '',
-          images: ['image1.jpg', 'image2.jpg'], // Placeholder for images
         },
       }),
     };
-
+  
     const payload = {
       role,
       email: formData.email,
       password: formData.password,
       profile: profileData,
     };
-
+  
     try {
       const response = await fetch(`${CONVEX_SERVER_URL}/auth/signUp`, {
         method: 'POST',
@@ -130,20 +128,23 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
         },
         body: JSON.stringify(payload),
       });
-
+  
       if (!response.ok) {
         throw new Error('Sign-up failed');
       }
-
-      // On success, redirect or handle accordingly
+  
       router.push('/dashboard');
     } catch (error) {
-      console.error(error);
+      console.error('Error during sign-up:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
+        <form
+        onSubmit={(event) =>
+          void handleSubmit(event)
+        } className="flex flex-col">
+
       <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
 
       {/* Role Selection */}
@@ -243,7 +244,7 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
                 name="miles"
                 value={formData.miles || ''}
                 onChange={handleInputChange}
-                placeholder="Miles Willing to Move"
+                placeholder="Miles"
               />
               <input
                 type="date"
@@ -260,50 +261,51 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
                 placeholder="Number of People"
               />
               <input
+                type="checkbox"
+                name="smoking"
+                checked={formData.smoking || false}
+                onChange={handleInputChange}
+              />
+              <label htmlFor="smoking">Smoking</label>
+              <input
                 type="number"
                 name="pets"
                 value={formData.pets || ''}
                 onChange={handleInputChange}
                 placeholder="Number of Pets"
               />
-              <label>
-                Smoking:
-                <input
-                  type="checkbox"
-                  name="smoking"
-                  checked={formData.smoking || false}
-                  onChange={handleInputChange}
-                />
-              </label>
               <textarea
                 name="summary"
+                placeholder="Summary"
                 value={formData.summary || ''}
                 onChange={handleInputChange}
-                placeholder="Summary"
+                className="mb-4 p-2 border rounded"
               />
             </>
           )}
 
+          {/* Conditional fields based on role */}
           {step === 2 && (role === 'Maintenance' || role === 'Cleaner') && (
             <>
-              <label className="mb-4">Availability</label>
-              <textarea
-                name="availability"
-                placeholder="Availability"
-                value={availability.join(', ') || ''}
-                onChange={(e) => setAvailability(e.target.value.split(', ').map(item => item.trim()))}
-                className="mb-4 p-2 border rounded"
-              />
               <input
                 type="text"
+                name="areaToMove"
+                value={formData.areaToMove || ''}
+                onChange={handleInputChange}
+                placeholder="Area to Move"
+              />
+              <input
+                type="number"
+                name="miles"
+                value={formData.miles || ''}
+                onChange={handleInputChange}
+                placeholder="Miles"
+              />
+              <textarea
                 name="keySkills"
-                placeholder="Key Skills (comma-separated)"
+                placeholder="Key Skills (comma separated)"
                 value={formData.keySkills?.join(', ') || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  keySkills: e.target.value.split(',').map(skill => skill.trim())
-                }))}
-                required
+                onChange={(e) => setFormData({ ...formData, keySkills: e.target.value.split(',').map(skill => skill.trim()) })}
                 className="mb-4 p-2 border rounded"
               />
               <textarea
@@ -321,7 +323,7 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
             {step > 1 && (
               <button
                 type="button"
-                onClick={handlePreviousQuestion}
+                onClick={() => handlePreviousQuestion()}
                 className="bg-gray-300 py-2 px-4 rounded"
               >
                 Back
@@ -329,7 +331,7 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
             )}
             <button
               type="button"
-              onClick={handleNextQuestion}
+              onClick={() => handleNextQuestion()}
               className="bg-blue-500 text-white py-2 px-4 rounded"
             >
               Next
@@ -362,6 +364,7 @@ const SignupForm = ({ switchToLogin }: SignupFormProps) => {
   );
 };
 
+// LoginForm Component
 interface LoginFormProps {
   switchToSignup: () => void;
 }
@@ -370,6 +373,7 @@ const LoginForm = ({ switchToSignup }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // Handle login form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -387,14 +391,18 @@ const LoginForm = ({ switchToSignup }: LoginFormProps) => {
         throw new Error('Login failed');
       }
 
-      // Handle successful login
+      // Redirect or handle successful login
     } catch (error) {
       alert((error as Error).message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
+      <form
+      onSubmit={(event) =>
+        void handleSubmit(event)
+      } className="flex flex-col">
+
       <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">Login</h1>
       <input
         type="email"
@@ -434,11 +442,11 @@ const LoginForm = ({ switchToSignup }: LoginFormProps) => {
   );
 };
 
+// Main Component
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
   const { isAuthenticated, isLoading } = useAuthClient();
   const router = useRouter();
-  const userRole = useQuery(api.users.getUserRole);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
